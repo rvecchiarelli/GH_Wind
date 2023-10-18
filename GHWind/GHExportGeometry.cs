@@ -62,7 +62,7 @@ namespace GHWind
                 var list = new List<string>();
                 foreach (double[] geo in geom)
                 {
-                    string line = geo[0].ToString() + "," + geo[1].ToString() + "," + geo[2].ToString() + "," + geo[3].ToString() + "," + geo[4].ToString() + "," + geo[5].ToString();
+                    string line = "&OBST XB=" + geo[0].ToString() + "," + geo[1].ToString() + "," + geo[2].ToString() + "," + geo[3].ToString() + "," + geo[4].ToString() + "," + geo[5].ToString() +" , SURF_ID='INERT' /";
                     list.Add(line);
                 }
                 lines = list.ToArray();
