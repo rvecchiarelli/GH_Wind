@@ -5,6 +5,10 @@ using Grasshopper.Kernel;
 using Rhino.Geometry;
 using System.IO;
 using System.Linq;
+using Grasshopper;
+using Grasshopper.Kernel.Data;
+using Grasshopper.Kernel.Types;
+using System.Drawing;
 
 /*
  * GHExportGeometry.cs
@@ -30,19 +34,22 @@ namespace GHWind
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("cubes as doubles", "cubes", "cubes as list of double[xmin, xmax, ymin, ymax, zmin, zmax]", GH_ParamAccess.list);
-            pManager.AddTextParameter("path", "path", "path to export geometry data to", GH_ParamAccess.item);
-            pManager.AddBooleanParameter("export?", "export?", "export data? use a button", GH_ParamAccess.item);
-            pManager.AddTextParameter("&MESH text", "&MESH text","connect panel that contains the full command of the &MESH line in FDS format",GH_ParamAccess.item);//added
-            pManager.AddTextParameter("&HEAD text", "&HEAD text", "connect panel that contains the full command of the &HEAD line in FDS format", GH_ParamAccess.item);//added
-            pManager.AddTextParameter("&TIME text", "&TIME text", "connect panel that contains the full command of the &TIME line in FDS format", GH_ParamAccess.item);//added
-            pManager.AddTextParameter("&DUMP text", "&DUMP text", "connect panel that contains the full command of the &DUMP line in FDS format", GH_ParamAccess.item);//added
-            pManager.AddTextParameter("&TAIL text", "&TAIL text", "connect panel that contains the full command of the &TAIL line in FDS format", GH_ParamAccess.item);//added this line to take a text box as a new input
+            pManager.AddGenericParameter("cubes as doubles", "cubes", "cubes as list of double[xmin, xmax, ymin, ymax, zmin, zmax]", GH_ParamAccess.list);//0
+            pManager.AddTextParameter("path", "path", "path to export geometry data to", GH_ParamAccess.item);//1
+            pManager.AddBooleanParameter("export?", "export?", "export data? use a button", GH_ParamAccess.item);//2
+            pManager.AddTextParameter("&MESH text", "&MESH text","connect panel that contains the full command of the &MESH line in FDS format",GH_ParamAccess.item);//3
+            pManager.AddTextParameter("&HEAD text", "&HEAD text", "connect panel that contains the full command of the &HEAD line in FDS format", GH_ParamAccess.item);//4
+            pManager.AddTextParameter("&TIME text", "&TIME text", "connect panel that contains the full command of the &TIME line in FDS format", GH_ParamAccess.item);//5
+            pManager.AddTextParameter("&DUMP text", "&DUMP text", "connect panel that contains the full command of the &DUMP line in FDS format", GH_ParamAccess.item);//6
+            pManager.AddSurfaceParameter("Inlet Surfaces", "Inlet Surfaces", "List of inlet surfaces (rectangular)", GH_ParamAccess.list);//7
+            pManager.AddSurfaceParameter("Outlet Surfaces", "Outlet Surfaces", "List of outlet surfaces (rectangular)", GH_ParamAccess.list);//8
+            pManager.AddPointParameter("origin", "origin", "origin", GH_ParamAccess.item);//9
+            
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-         
+            
         }
 
 
@@ -71,8 +78,17 @@ namespace GHWind
             string mydump = null;// added
             if (!DA.GetData(6, ref mydump)) { return; };//added these two lines to get the data from the new grasshopper parameter input
 
-            string mytail = null;// added
-            if (!DA.GetData(7, ref mytail)) { return; };//added these two lines to get the data from the new grasshopper parameter input
+            List<Surface> inlets = new List<Surface>();
+            if (!DA.GetDataList(7, inlets)) { return; };
+
+            List<Surface> outlets = new List<Surface>();
+            if (!DA.GetDataList(8, outlets)) { return; }
+
+            Point3d origin = Point3d.Unset;
+            if (!DA.GetData(9, ref origin)) { return; }
+
+            //List<Point3d> myinlet = new List<Point3d>();
+            //if (!DA.GetDataList(8, myinlet)) {  return; };
 
 
             //EXPORT GEOMETRY
@@ -87,6 +103,25 @@ namespace GHWind
                     list.Add(line);
                 }
 
+                var myinletlist = new List<string>();
+                foreach (Surface inlet in inlets)
+                {
+                    BoundingBox inletbox = inlet.GetBoundingBox(true);
+                    Point3d[] inletcorner = inletbox.GetCorners(); 
+                    string inletboxline = "&VENT XB=" + (inletcorner[0][0] - origin[0]).ToString() + "," + (inletcorner[1][0]-origin[0]).ToString() + "," + (inletcorner[0][1] - origin[1]).ToString() + "," + (inletcorner[2][1] - origin[1]).ToString() + "," + (inletcorner[0][2] - origin[2]) + "," + (inletcorner[4][2] - origin[2]).ToString() + ", COLOR = 'GREEN', SURF_ID = 'supply' //" ;
+                    myinletlist.Add(inletboxline);
+                }
+
+                var myoutletlist = new List<string>();
+                foreach (Surface outlet in outlets)
+                {
+                    BoundingBox outletbox = outlet.GetBoundingBox(true);
+                    Point3d[] outletcorner = outletbox.GetCorners();
+                    string outletboxline = "&VENT XB=" + (outletcorner[0][0] - origin[0]).ToString() + "," + (outletcorner[1][0] - origin[0]).ToString() + "," + (outletcorner[0][1] - origin[1]).ToString() + "," + (outletcorner[2][1] - origin[1]).ToString() + "," + (outletcorner[0][2] - origin[2]) + "," + (outletcorner[4][2] - origin[2]).ToString() + ", COLOR = 'RED', SURF_ID = 'exhaust' //";
+                    myoutletlist.Add(outletboxline);
+                }
+
+
                 List<string> myheadlist = new List<string>();
                 myheadlist.Add(myhead); 
 
@@ -96,6 +131,7 @@ namespace GHWind
                 List<string>mydumplist = new List<string>();
                 mydumplist.Add(mydump);
 
+                string mytail = "&TAIL //";
                 List<string> mytaillist = new List<string>();
                 mytaillist.Add(mytail);
 
@@ -111,13 +147,17 @@ namespace GHWind
 
                 var htdmo = htdm.Concat(list);
 
-                var htdmot = htdmo.Concat(mytaillist);
+                var htdmoi = htdmo.Concat(myinletlist);
+                
+                var htdmoiu = htdmoi.Concat(myoutletlist);
 
-                lines = htdmot.ToArray(); //changed this line from lines = list.ToArray()
+                var htdmoiut = htdmoiu.Concat(mytaillist);
+
+                lines = htdmoiut.ToArray(); //changed this line from lines = list.ToArray()
 
                 File.WriteAllLines(path, lines);
                 export = false;
-               
+
                
             }
 
