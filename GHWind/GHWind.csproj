@@ -60,8 +60,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GeoArray.cs" />
     <Compile Include="ExportFDS.cs" />
     <Compile Include="Domains.cs" />
+    <Compile Include="Flatten.cs" />
     <Compile Include="GHDiscrMesh.cs" />
     <Compile Include="GHExportGeometry.cs" />
     <Compile Include="GHFFDliddrivencavity.cs" />
@@ -117,6 +119,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\fire.png" />
+    <None Include="Resources\flatten.png" />
     <Content Include="Resources\smile.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

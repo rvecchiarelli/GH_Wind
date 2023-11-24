@@ -103,6 +103,26 @@ namespace GHWind.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap fire {
+            get {
+                object obj = ResourceManager.GetObject("fire", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap flatten {
+            get {
+                object obj = ResourceManager.GetObject("flatten", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap liddrivencavity {
             get {
                 object obj = ResourceManager.GetObject("liddrivencavity", resourceCulture);
@@ -146,14 +166,6 @@ namespace GHWind.Properties {
         internal static System.Drawing.Bitmap wentao {
             get {
                 object obj = ResourceManager.GetObject("wentao", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        internal static System.Drawing.Bitmap fire {
-            get
-            {
-                object obj = ResourceManager.GetObject("fire", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

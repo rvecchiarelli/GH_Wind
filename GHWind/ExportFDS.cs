@@ -46,6 +46,7 @@ namespace GHWind
             pManager.AddBrepParameter("bounding box", "box", "bounding box as brep", GH_ParamAccess.item);
             //4
             pManager.AddGenericParameter("cubes as doubles", "cubes", "cubes as list of double[xmin, xmax, ymin, ymax, zmin, zmax] (Discr_Mesh output)", GH_ParamAccess.list);
+            pManager[4].Optional = true;
             //5
             pManager.AddSurfaceParameter("Inlet Surfaces", "Inlet Surfaces", "List of inlet surfaces (rectangular)", GH_ParamAccess.list);
             //6
@@ -59,9 +60,9 @@ namespace GHWind
             //10
             pManager.AddTextParameter("IJK", "I J K", "Number of cells in the X, Y, and Z directions as a list.", GH_ParamAccess.list);
             //11
-            pManager.AddNumberParameter("Supply Flow", "Supply Flow", "Supply flow in m/s", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Supply Flow", "Supply Flow", "Supply flow in m3/s", GH_ParamAccess.item);
             //12
-            pManager.AddNumberParameter("Exhaust Flow", "Exhaust Flow", "Exhaust flow in m/s", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Exhaust Flow", "Exhaust Flow", "Exhaust flow in m3/s", GH_ParamAccess.item);
             //13
             pManager.AddTextParameter("Slices", "Slices", "Slices", GH_ParamAccess.list);
 
@@ -89,7 +90,7 @@ namespace GHWind
             if (!DA.GetData(3, ref mesh)) { return; }
 
             List<double[]> obsts = new List<double[]>();
-            if (!DA.GetDataList(4, obsts)) { return; };
+            DA.GetDataList(4, obsts);
 
             List<Surface> inlets = new List<Surface>();
             if (!DA.GetDataList(5, inlets)) { return; };
@@ -127,6 +128,8 @@ namespace GHWind
                 List<string> headlist = new List<string>();
                 headlist.Add(head);
 
+                
+
                 //Get the end time and write &TIME
                 List<string> timelist = new List<string>();
                 string timeline = "&TIME T_END=" + time.ToString() + "/";
@@ -134,7 +137,7 @@ namespace GHWind
 
                 //Get the number of frames and write &DUMP
                 List<string> dumplist = new List<string>();
-                string dumpline = "&DUMP NFRAMES=" + nframes.ToString() + "/";
+                string dumpline = "&DUMP NFRAMES=" + nframes.ToString() + ",PLOT3D_QUANTITY(1:5)='TEMPERATURE','U-VELOCITY','V-VELOCITY','W-VELOCITY','PRESSURE',DT_PL3D="+ nframes.ToString() + ",WRITE_XYZ=T/";
                 dumplist.Add(dumpline);
 
                 //Get bounding box and write &MESH
@@ -146,12 +149,17 @@ namespace GHWind
 
                 //Get obstructions (walls, etc...) and write &OBST
                 var obstlist = new List<string>();
-                foreach (double[] obst in obsts)
+                if (obsts.Count != 0)
                 {
-                    string obstline = "&OBST XB=" + obst[0].ToString() + "," + obst[1].ToString() + "," + obst[2].ToString() + "," + obst[3].ToString() + "," + obst[4].ToString() + "," + obst[5].ToString() + " , SURF_ID='INERT' /";
-                    obstlist.Add(obstline);
+                    
+                    foreach (double[] obst in obsts)
+                    {
+                        string obstline = "&OBST XB=" + obst[0].ToString() + "," + obst[1].ToString() + "," + obst[2].ToString() + "," + obst[3].ToString() + "," + obst[4].ToString() + "," + obst[5].ToString() + " , SURF_ID='INERT' /";
+                        obstlist.Add(obstline);
+                    }
                 }
-
+         
+                
                 //Get inlets and write &VENT
                 var inletlist = new List<string>();
                 foreach (Surface inlet in inlets)
@@ -174,11 +182,11 @@ namespace GHWind
 
                 //Get supply and exhaust velocity and write &SURF
                 List<string> supplylist = new List<string>();
-                string supplyline = "&SURF ID = 'supply', VEL = -" + supply.ToString() + " /";
+                string supplyline = "&SURF ID = 'supply', VOLUME_FLOW = -" + supply.ToString() + " /";
                 supplylist.Add(supplyline);
 
                 List<string> exhaustlist = new List<string>();
-                string exhaustline = "&SURF ID = 'exhaust', VEL =" + exhaust.ToString() + " /";
+                string exhaustline = "&SURF ID = 'exhaust', VOLUME_FLOW =" + exhaust.ToString() + " /";
                 exhaustlist.Add(exhaustline);
 
                 //Get slices lines
