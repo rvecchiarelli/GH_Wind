@@ -97,6 +97,12 @@ namespace GHWind
             double exhaust = 1.0;
             if (!DA.GetData(9, ref exhaust)) { return; };
 
+            List<Surface> inlets = new List<Surface>();
+            if (!DA.GetDataList(5, inlets)) { return; };
+
+            List<Surface> outlets = new List<Surface>();
+            if (!DA.GetDataList(6, outlets)) { return; }
+
 
             //Mimic FDS geom.f90  snappingGeom subroutine
 
@@ -128,99 +134,100 @@ namespace GHWind
             //Take the obstacles boxes and the origin point and remap the boxes to an origin of 0,0,0.
             //For each point in the new list of obstacle points, check if that point exists in the list of mesh nodes
             //(therefore is the obstacle aligned with a mesh cell) if not, find the nearest point and replace the unaligned point
-            //with a point that is aligned to the mesh and create a new obstacle box. 
-           
-            Point3d zero = new Point3d(0, 0, 0);
-            Vector3d obstTranslate = zero - origin;
-
-            List<Point3d> snappedVerts = new List<Point3d>(); //
-             
-            List<string> verts = new List<string>();
-                
-            List<Box> snappedObsts = new List<Box>();
-
-            Plane plane = new Plane(10,10,0,0);
-
-            foreach (Box obst in obstacles)
+            //with a point that is aligned to the mesh and create a new obstacle box.
+            //
+            List<string> geoStrings = new List<string>();
+            if (obstacles.Count() != 0)
             {
-                var obstCorners= obst.GetCorners();
+                Point3d zero = new Point3d(0, 0, 0);
+                Vector3d obstTranslate = zero - origin;
 
+                List<Point3d> snappedVerts = new List<Point3d>(); //
 
-                foreach (Point3d corner in obstCorners)
+                List<string> verts = new List<string>();
+
+                List<Box> snappedObsts = new List<Box>();
+
+                Plane plane = new Plane(10, 10, 0, 0);
+
+                foreach (Box obst in obstacles)
                 {
+                    var obstCorners = obst.GetCorners();
 
-                    Point3d newVerts = corner + obstTranslate;
 
-                    if (nodes.Contains(newVerts) == false)
+                    foreach (Point3d corner in obstCorners)
                     {
-                        Point3d closestPoint = Point3dList.ClosestPointInList(nodes, newVerts);
-                        newVerts = closestPoint;
+
+                        Point3d newVerts = corner + obstTranslate;
+
+                        if (nodes.Contains(newVerts) == false)
+                        {
+                            Point3d closestPoint = Point3dList.ClosestPointInList(nodes, newVerts);
+                            newVerts = closestPoint;
+                        }
+                        else
+                        {
+                            newVerts = newVerts;
+                        }
+                        snappedVerts.Add(newVerts);
+
+                    }
+
+                    Box snappedBox = new Box(plane, snappedVerts);
+                    snappedObsts.Add(snappedBox);
+
+
+                }
+
+
+
+                //Makes a list of all the points in the list of mesh nodes that are contained within an obstacle
+                List<Point3d> obstPoint = new List<Point3d>();
+                foreach (Box obst in snappedObsts)
+                {
+                    Brep brepObst = obst.ToBrep();
+                    foreach (Point3d node in nodes)
+                    {
+
+                        if (brepObst.IsPointInside(node, 0.0001, false) == true)
+                        {
+                            obstPoint.Add(node);
+                        }
+                    }
+
+                }
+
+
+                var geoList = new List<GeoArray>();
+                foreach (Point3d node in nodes)
+                {
+                    if (obstPoint.Contains(node) == true)
+                    {
+                        geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 1 });
                     }
                     else
                     {
-                        newVerts = newVerts;
+                        geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 0 });
                     }
-                    snappedVerts.Add(newVerts);
-
                 }
 
-                Box snappedBox = new Box(plane,snappedVerts);
-                snappedObsts.Add(snappedBox);
+
+                foreach (Point3d node in nodes)
+                {
+                    var newNodes = node.ToString();
+                    verts.Add(newNodes);
+                }
+
                 
-             
-            }
-
-
-
-            //Makes a list of all the points in the list of mesh nodes that are contained within an obstacle
-            List<Point3d> obstPoint = new List<Point3d>();
-            foreach (Box obst in snappedObsts)
-            {
-                Brep brepObst = obst.ToBrep();
-                foreach(Point3d node in nodes)
+                foreach (GeoArray item in geoList)
                 {
-                  
-                    if (brepObst.IsPointInside(node, 0.0001,false) == true)
-                    {
-                        obstPoint.Add(node);
-                    }
+                    string geoString = item.X.ToString() + "," + item.Y.ToString() + "," + item.Z.ToString() + "," + item.D.ToString();
+                    geoStrings.Add(geoString);
                 }
 
             }
-
-
-            var geoList = new List<GeoArray>();
-            foreach(Point3d node in nodes)
-            {
-                if (obstPoint.Contains(node)==true)
-                {
-                    geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 1 });
-                }
-                else
-                {
-                    geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 0 });
-                }
-            }
-
-
-            foreach (Point3d node in nodes)
-            {
-                var newNodes = node.ToString();
-                verts.Add(newNodes);
-            }
-
-            List<string> geoStrings = new List<string>();
-            foreach (GeoArray item in geoList)
-            {
-                string geoString = item.X.ToString() + "," + item.Y.ToString() + "," + item.Z.ToString() + "," + item.D.ToString();
-                geoStrings.Add(geoString);
-            }
-            
-            
         
             var geoArray = geoStrings.ToArray();
-
-            var lines = verts.ToArray();
 
 
             //EXPORT GEOMETRY
