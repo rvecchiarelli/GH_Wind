@@ -168,17 +168,15 @@ namespace GHWind
                         obstlist.Add(obstline);
                     }
                 }
-         
-                
+
+
                 //Get inlets and write &VENT
                 var inletlist = new List<string>();
-                List<string> supplylist = new List<string>();
                 foreach (Surface inlet in inlets)
                 {
-                    
-                    BoundingBox inletbox = inlet.GetBoundingBox(true);
-                    Point3d[] inletcorner = inletbox.GetCorners();
-                   
+
+                    double[] inletinfo = InletGeo.SurfaceArea(inlet);
+
                     string inletboxline = null;
                     string supplyline = null;
                     
@@ -188,24 +186,28 @@ namespace GHWind
                         
 
                         case 0: //Linear
-                            inletboxline = "&VENT XB=" + (inletcorner[0][0]).ToString() + "," + (inletcorner[1][0]).ToString() + "," + (inletcorner[0][1]).ToString() + "," + (inletcorner[2][1]).ToString() + "," + (inletcorner[0][2]) + "," + (inletcorner[4][2]).ToString() + ", COLOR = 'GREEN', SURF_ID = 'supply' /";
-                            supplyline = "&SURF ID = 'supply', VOLUME_FLOW = -" + supply.ToString() + " /";
+
+                            inletboxline = $"&VENT XB={inletinfo[1]},{inletinfo[2]},{inletinfo[3]},{inletinfo[4]},{inletinfo[5]},{inletinfo[6]}, COLOR='GREEN', SURF_ID='supply' /";
+                           
                             inletlist.Add(inletboxline);
-                            supplylist.Add(supplyline);
+                            
                             break;
                         case 1://Linear Louvered
-                            inletboxline = "&VENT XB=" + (inletcorner[0][0]).ToString() + "," + (inletcorner[1][0]).ToString() + "," + (inletcorner[0][1]).ToString() + "," + (inletcorner[2][1]).ToString() + "," + (inletcorner[0][2]) + "," + (inletcorner[4][2]).ToString() + ", COLOR = 'GREEN', SURF_ID = 'supply' /";
-                            supplyline = "&SURF ID = 'supply', VOLUME_FLOW = -" + supply.ToString() + "VEL_T= 0,-"+ ((supply/0.09)*(Math.Tan(45*(Math.PI/180)))).ToString() + " /";
+                            inletboxline = $"&VENT XB={inletinfo[1]},{inletinfo[2]},{inletinfo[3]},{inletinfo[4]},{inletinfo[5]},{inletinfo[6]}, COLOR='GREEN', SURF_ID='supply' /";
+                        
                             inletlist.Add(inletboxline);
-                            supplylist.Add(supplyline);
+                        
                             break;
                         case 2: // Square Louvered
-                            TerrainAlpha = 0.22;
-                            TerrainDelta = 370;
+                            List<string> inletlines = InletGeo.SplitSquare(inlet);
+                            inletlist.AddRange(inletlines);
+                            var hi = inletlist;
+
                             break;
                         case 3: //Swirl
-                            TerrainAlpha = 0.33;
-                            TerrainDelta = 460;
+                            List<string> inletlinesswirl = InletGeo.SplitSwirl(inlet);
+                            inletlist.AddRange(inletlinesswirl);
+                          
                             break;
                     }
                    
@@ -213,13 +215,49 @@ namespace GHWind
 
                 }
 
+                List<string> supplylist = new List<string>();
+                double area = InletGeo.SurfaceArea(inlets[0])[0];
+
+
+                switch (venttype)
+                {
+
+
+                    case 0: //Linear
+
+                        
+                        string supplyline = "&SURF ID = 'supply', VOLUME_FLOW = -" + supply.ToString() + " /";
+                       
+                        supplylist.Add(supplyline);
+                        break;
+                    case 1://Linear Louvered
+                        
+                        string supplylinelin = $"&SURF ID='supply', VOLUME_FLOW=-{supply}, VEL_T=0,-{supply / 0.09 * Math.Tan(45 * Math.PI / 180)} /";
+                        supplylist.Add(supplylinelin);
+                        break;
+                    case 2: // Square Louvered
+                       
+                        List<string> supplylines = InletGeo.WriteSurfSquare(supply, area);
+                        supplylist.AddRange(supplylines);
+                       
+                        break;
+                    case 3: //Swirl
+                       
+                        List<string> supplylinesswirl = InletGeo.WriteSurfSwirl(supply, area);
+                        supplylist.AddRange(supplylinesswirl);
+                        break;
+                }
+
+
+
+
                 //Get outlets and write &VENT
                 var outletlist = new List<string>();
                 foreach (Surface outlet in outlets)
                 {
                     BoundingBox outletbox = outlet.GetBoundingBox(true);
                     Point3d[] outletcorner = outletbox.GetCorners();
-                    string outletboxline = "&VENT XB=" + (outletcorner[0][0]).ToString() + "," + (outletcorner[1][0]).ToString() + "," + (outletcorner[0][1]).ToString() + "," + (outletcorner[2][1]).ToString() + "," + (outletcorner[0][2]) + "," + (outletcorner[4][2]).ToString() + ", COLOR = 'RED', SURF_ID = 'exhaust' /";
+                    string outletboxline = $"&VENT XB={(outletcorner[0][0])},{(outletcorner[1][0])},{(outletcorner[0][1])},{(outletcorner[2][1])},{(outletcorner[0][2])},{(outletcorner[4][2])}, COLOR='RED', SURF_ID='exhaust' /";
                     outletlist.Add(outletboxline);
                 }
 
@@ -229,7 +267,7 @@ namespace GHWind
                 //supplylist.Add(supplyline);
 
                 List<string> exhaustlist = new List<string>();
-                string exhaustline = "&SURF ID = 'exhaust', VOLUME_FLOW =" + exhaust.ToString() + " /";
+                string exhaustline = $"&SURF ID = 'exhaust', VOLUME_FLOW = {exhaust.ToString()} /";
                 exhaustlist.Add(exhaustline);
 
                 //Get slices lines
