@@ -40,35 +40,39 @@ namespace GHWind
             //0
             pManager.AddBooleanParameter("export?", "export?", "export data? use a button", GH_ParamAccess.item);
             //1
-            pManager.AddTextParameter("path", "path", "path to export geometry data to", GH_ParamAccess.item);
+            pManager.AddIntegerParameter("Case Index", "Index", "Index of the case to write as an integer", GH_ParamAccess.item);
             //2
-            pManager.AddPointParameter("origin", "origin", "origin", GH_ParamAccess.item);
+            pManager.AddTextParameter("path", "path", "Path to the directory where files will be written. A subdirectory will be created with named with the current index. A .fds file will be created within this directory. If these already exsist they will be overwritten.", GH_ParamAccess.item);
             //3
-            pManager.AddBrepParameter("bounding box", "box", "bounding box as brep", GH_ParamAccess.item);
-            //4
-            pManager.AddGenericParameter("cubes as doubles", "cubes", "cubes as list of double[xmin, xmax, ymin, ymax, zmin, zmax] (Discr_Mesh output)", GH_ParamAccess.list);
-            pManager[4].Optional = true;
-            //5
-            pManager.AddSurfaceParameter("Inlet Surfaces", "Inlet Surfaces", "List of inlet surfaces (rectangular)", GH_ParamAccess.list);
-            //6
-            pManager.AddSurfaceParameter("Outlet Surfaces", "Outlet Surfaces", "List of outlet surfaces (rectangular)", GH_ParamAccess.list);
-            //7
-            pManager.AddTextParameter("&HEAD text", "&HEAD text", "connect panel that contains the full command of the &HEAD line in FDS format", GH_ParamAccess.item);
-            //8
             pManager.AddNumberParameter("End Time", "End Time", "End time as single number", GH_ParamAccess.item);
-            //9
-            pManager.AddIntegerParameter("Number of Frames", "NFrames", "Number of steps to produce output files for.", GH_ParamAccess.item);
-            //10
+            //4
+            pManager.AddNumberParameter("Initial Room Temperature", "Initial Temp", "Initial room temperature in °C", GH_ParamAccess.item);
+            //5
+            pManager.AddIntegerParameter("Number of Frames", "NFrames", "Frequency of file dumps.", GH_ParamAccess.item);
+            //6
+            pManager.AddPointParameter("origin", "origin", "Origin point that is the same as the origin input of Discr_Mesh.", GH_ParamAccess.item);
+            //7
+            pManager.AddBrepParameter("bounding box", "box", "Bounding box as brep for full mesh", GH_ParamAccess.item);
+            //8
             pManager.AddTextParameter("IJK", "I J K", "Number of cells in the X, Y, and Z directions as a list.", GH_ParamAccess.list);
+            //9
+            pManager.AddGenericParameter("cubes as doubles", "cubes", "Obsacales (cubes as list of double[xmin, xmax, ymin, ymax, zmin, zmax] (Discr_Mesh output))", GH_ParamAccess.list);
+            pManager[9].Optional = true;
+            //10
+            pManager.AddSurfaceParameter("Inlet Surfaces", "Inlet Surfaces", "List of inlet surfaces (rectangular)", GH_ParamAccess.list);
             //11
-            pManager.AddNumberParameter("Supply Flow", "Supply Flow", "Supply flow in m3/s", GH_ParamAccess.item);
+            pManager.AddSurfaceParameter("Outlet Surfaces", "Outlet Surfaces", "List of outlet surfaces (rectangular)", GH_ParamAccess.list);
             //12
-            pManager.AddNumberParameter("Exhaust Flow", "Exhaust Flow", "Exhaust flow in m3/s", GH_ParamAccess.item);
-            //13
-            pManager.AddTextParameter("Slices", "Slices", "Slices", GH_ParamAccess.list);
-            //14
             pManager.AddIntegerParameter("Vent Type", "Vent Type", "Coefficients for Vent Type. 0 = Linear; 1 = Louvered; 2 = Radial; 3 = Spiral.", GH_ParamAccess.item);
-
+            //13
+            pManager.AddNumberParameter("Supply Temperature", "Supply Temp", "Temperature of the supply air in °C", GH_ParamAccess.item);
+            //14
+            pManager.AddNumberParameter("Supply Flow", "Supply Flow", "Supply flow in m3/s", GH_ParamAccess.item);
+            //15
+            pManager.AddNumberParameter("Exhaust Flow", "Exhaust Flow", "Exhaust flow in m3/s", GH_ParamAccess.item);
+            //16
+            pManager.AddTextParameter("Slices", "Slices", "List of &SLCF lines", GH_ParamAccess.list);
+            
 
 
         }
@@ -85,46 +89,53 @@ namespace GHWind
             DA.GetData(0, ref export);
 
             string path = null;
-            if (!DA.GetData(1, ref path)) { return; };
+            if (!DA.GetData(2, ref path)) { return; };
 
             Point3d origin = Point3d.Unset;
-            if (!DA.GetData(2, ref origin)) { return; }
+            if (!DA.GetData(6, ref origin)) { return; }
 
             Brep mesh = new Brep();
-            if (!DA.GetData(3, ref mesh)) { return; }
+            if (!DA.GetData(7, ref mesh)) { return; }
 
             List<double[]> obsts = new List<double[]>();
-            DA.GetDataList(4, obsts);
+            DA.GetDataList(9, obsts);
 
             List<Surface> inlets = new List<Surface>();
-            if (!DA.GetDataList(5, inlets)) { return; };
+            if (!DA.GetDataList(10, inlets)) { return; };
 
             List<Surface> outlets = new List<Surface>();
-            if (!DA.GetDataList(6, outlets)) { return; }
-
-            string head = null;
-            if (!DA.GetData(7, ref head)) { return; };
+            if (!DA.GetDataList(11, outlets)) { return; }
 
             double time = 60.0;
-            if (!DA.GetData(8, ref time)) { return; };
+            if (!DA.GetData(3, ref time)) { return; };
 
             int nframes = 1000;
-            if (!DA.GetData(9, ref nframes)) { return; };
+            if (!DA.GetData(5, ref nframes)) { return; };
 
             List<string> ijk = new List<string>();
-            if (!DA.GetDataList(10, ijk)) { return; };
+            if (!DA.GetDataList(8, ijk)) { return; };
 
             double supply = 1.0;
-            if (!DA.GetData(11, ref supply)) { return; };
+            if (!DA.GetData(14, ref supply)) { return; };
 
             double exhaust = 1.0;
-            if (!DA.GetData(12, ref exhaust)) { return; };
+            if (!DA.GetData(15, ref exhaust)) { return; };
 
             List<string> slices = new List<string>();
-            if (!DA.GetDataList(13, slices)) { return; };
+            if (!DA.GetDataList(16, slices)) { return; };
              
             int venttype = 0;
-            if (!DA.GetData(14,ref venttype)) { return; };
+            if (!DA.GetData(12,ref venttype)) { return; };
+
+            int index = 0;
+            if (!DA.GetData(1, ref index)) { return; };
+
+            double inittmp = 20;
+            if (!DA.GetData(4, ref inittmp)) { return; };
+
+            double supplytmp = 20;
+            if (!DA.GetData(13, ref supplytmp)) { return; };
+
 
             //EXPORT GEOMETRY
             if (export)
@@ -135,9 +146,30 @@ namespace GHWind
                 string[] lines;
                 //Get the Text for &HEAD
                 List<string> headlist = new List<string>();
-                headlist.Add(head);
+                string ventname;
+                if (venttype == 0)
+                {
+                    ventname = "Linear";
+                }
+                else if (venttype == 1)
+                {
+                    ventname = "Louvered";
+                }
+                else if (venttype == 2)
+                {
+                    ventname = "Louvered Square";
+                }
+                else
+                {
+                    ventname = "Swirl";
+                }
 
-                
+                string head = $"&HEAD TITLE='Case: {index}, Vent Type:{ventname}', CHID = '{index}' / ";
+                string misc = $"&MISC TMPA = {inittmp} /";
+               
+                headlist.Add(head);
+                headlist.Add(misc);
+
 
                 //Get the end time and write &TIME
                 List<string> timelist = new List<string>();
@@ -188,26 +220,22 @@ namespace GHWind
                         case 0: //Linear
 
                             inletboxline = $"&VENT XB={inletinfo[1]},{inletinfo[2]},{inletinfo[3]},{inletinfo[4]},{inletinfo[5]},{inletinfo[6]}, COLOR='GREEN', SURF_ID='supply' /";
-                           
                             inletlist.Add(inletboxline);
-                            
                             break;
                         case 1://Linear Louvered
+
                             inletboxline = $"&VENT XB={inletinfo[1]},{inletinfo[2]},{inletinfo[3]},{inletinfo[4]},{inletinfo[5]},{inletinfo[6]}, COLOR='GREEN', SURF_ID='supply' /";
-                        
                             inletlist.Add(inletboxline);
-                        
                             break;
                         case 2: // Square Louvered
+
                             List<string> inletlines = InletGeo.SplitSquare(inlet);
                             inletlist.AddRange(inletlines);
-                            var hi = inletlist;
-
                             break;
                         case 3: //Swirl
+
                             List<string> inletlinesswirl = InletGeo.SplitSwirl(inlet);
                             inletlist.AddRange(inletlinesswirl);
-                          
                             break;
                     }
                    
@@ -225,25 +253,22 @@ namespace GHWind
 
                     case 0: //Linear
 
-                        
-                        string supplyline = "&SURF ID = 'supply', VOLUME_FLOW = -" + supply.ToString() + " /";
-                       
+                        string supplyline = $"&SURF ID = 'supply', VOLUME_FLOW = -{supply.ToString()},TMP_FRONT= {supplytmp} /";
                         supplylist.Add(supplyline);
                         break;
                     case 1://Linear Louvered
                         
-                        string supplylinelin = $"&SURF ID='supply', VOLUME_FLOW=-{supply}, VEL_T=0,-{supply / 0.09 * Math.Tan(45 * Math.PI / 180)} /";
+                        string supplylinelin = $"&SURF ID='supply', VOLUME_FLOW=-{supply}, VEL_T=0,-{supply / 0.09 * Math.Tan(45 * Math.PI / 180)}, TMP_FRONT= {supplytmp} /";
                         supplylist.Add(supplylinelin);
                         break;
                     case 2: // Square Louvered
                        
-                        List<string> supplylines = InletGeo.WriteSurfSquare(supply, area);
+                        List<string> supplylines = InletGeo.WriteSurfSquare(supply, area, supplytmp);
                         supplylist.AddRange(supplylines);
-                       
                         break;
                     case 3: //Swirl
                        
-                        List<string> supplylinesswirl = InletGeo.WriteSurfSwirl(supply, area);
+                        List<string> supplylinesswirl = InletGeo.WriteSurfSwirl(supply, area, supplytmp);
                         supplylist.AddRange(supplylinesswirl);
                         break;
                 }
@@ -255,9 +280,8 @@ namespace GHWind
                 var outletlist = new List<string>();
                 foreach (Surface outlet in outlets)
                 {
-                    BoundingBox outletbox = outlet.GetBoundingBox(true);
-                    Point3d[] outletcorner = outletbox.GetCorners();
-                    string outletboxline = $"&VENT XB={(outletcorner[0][0])},{(outletcorner[1][0])},{(outletcorner[0][1])},{(outletcorner[2][1])},{(outletcorner[0][2])},{(outletcorner[4][2])}, COLOR='RED', SURF_ID='exhaust' /";
+                    double[] outletcorner = InletGeo.SurfaceArea(outlet);
+                    string outletboxline = $"&VENT XB={(outletcorner[1])},{(outletcorner[2])},{(outletcorner[3])},{(outletcorner[4])},{(outletcorner[5])},{(outletcorner[6])}, COLOR='RED', SURF_ID='exhaust' /";
                     outletlist.Add(outletboxline);
                 }
 
@@ -298,7 +322,13 @@ namespace GHWind
 
                 lines = htdmoiosest.ToArray();
 
-                File.WriteAllLines(path, lines);
+                string maindir = $@"{path}\{index.ToString()}";
+                string filepath = $@"{maindir}\{index.ToString()}.fds";
+
+                Directory.CreateDirectory(maindir);
+                var currentfile = File.Create(filepath);
+                currentfile.Close();
+                File.WriteAllLines(filepath, lines);
                 export = false;
 
               

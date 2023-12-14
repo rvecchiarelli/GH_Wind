@@ -121,29 +121,29 @@ namespace GHWind
             return vents;
         }
 
-        public static List<string> WriteSurfSwirl(double supply, double area)
+        public static List<string> WriteSurfSwirl(double supply, double area, double supplytmp)
         {
             List<string> surfs = new List<string>();
 
             double vel = supply / area;
 
-            string surf1 = $"&SURF ID='supply 1', VOLUME_FLOW =-{supply}, VEL_T = -{vel*Math.Sin((45*(Math.PI/180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))} /";
+            string surf1 = $"&SURF ID='supply 1', VOLUME_FLOW =-{supply}, VEL_T = -{vel*Math.Sin((45*(Math.PI/180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf1);
-            string surf2 = $"&SURF ID='supply 2', VOLUME_FLOW =-{supply}, VEL_T = -{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((45 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((45 * (Math.PI / 180)))} /";
+            string surf2 = $"&SURF ID='supply 2', VOLUME_FLOW =-{supply}, VEL_T = -{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((45 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((45 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf2);
-            string surf3 = $"&SURF ID='supply 3', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))} /";
+            string surf3 = $"&SURF ID='supply 3', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf3);
-            string surf4 = $"&SURF ID='supply 4', VOLUME_FLOW =-{supply}, VEL_T = -{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((45 * (Math.PI / 180)))},-{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((45 * (Math.PI / 180)))} /";
+            string surf4 = $"&SURF ID='supply 4', VOLUME_FLOW =-{supply}, VEL_T = -{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((45 * (Math.PI / 180)))},-{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((45 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf4);
             string surf5 = $"&SURF ID='supply 5', VOLUME_FLOW = 0 /";
             surfs.Add(surf5);
-            string surf6 = $"&SURF ID='supply 6', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((45 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((45 * (Math.PI / 180)))} /";
+            string surf6 = $"&SURF ID='supply 6', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((45 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((45 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf6);
-            string surf7 = $"&SURF ID='supply 7', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},-{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))} /";
+            string surf7 = $"&SURF ID='supply 7', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},-{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf7);
-            string surf8 = $"&SURF ID='supply 8', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((45 * (Math.PI / 180)))},-{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((45 * (Math.PI / 180)))} /";
+            string surf8 = $"&SURF ID='supply 8', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((45 * (Math.PI / 180)))},-{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((45 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf8);
-            string surf9 = $"&SURF ID='supply 9', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))} /";
+            string surf9 = $"&SURF ID='supply 9', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf9);
 
 
@@ -239,7 +239,7 @@ namespace GHWind
             return vents;
         }
 
-        public static List<string> WriteSurfSquare(double supply, double area)
+        public static List<string> WriteSurfSquare(double supply, double area, double supplytmp)
         {
             List<string> surfs = new List<string>();
 
@@ -247,21 +247,21 @@ namespace GHWind
 
             
 
-            string surf1 = $"&SURF ID='supply 1', VOLUME_FLOW =-{supply}, VEL_T = -{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))} /";
+            string surf1 = $"&SURF ID='supply 1', VOLUME_FLOW =-{supply}, VEL_T = -{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf1);
-            string surf2 = $"&SURF ID='supply 2', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))} /";
+            string surf2 = $"&SURF ID='supply 2', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf2);
-            string surf3 = $"&SURF ID='supply 3', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))} /";
+            string surf3 = $"&SURF ID='supply 3', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf3);
-            string surf4 = $"&SURF ID='supply 4', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},-{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))} /";
+            string surf4 = $"&SURF ID='supply 4', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},-{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf4);
-            string surf5 = $"&SURF ID='supply 5', VOLUME_FLOW =-{supply}, VEL_T = -{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))} /";
+            string surf5 = $"&SURF ID='supply 5', VOLUME_FLOW =-{supply}, VEL_T = -{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf5);
-            string surf6 = $"&SURF ID='supply 6', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))} /";
+            string surf6 = $"&SURF ID='supply 6', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf6);
-            string surf7 = $"&SURF ID='supply 7', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))} /";
+            string surf7 = $"&SURF ID='supply 7', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((0 * (Math.PI / 180)))},{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((0 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf7);
-            string surf8 = $"&SURF ID='supply 8', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},-{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))} /";
+            string surf8 = $"&SURF ID='supply 8', VOLUME_FLOW =-{supply}, VEL_T = {vel * Math.Sin((45 * (Math.PI / 180))) * Math.Cos((90 * (Math.PI / 180)))},-{vel * Math.Sin((45 * (Math.PI / 180))) * Math.Sin((90 * (Math.PI / 180)))}, TMP_FRONT= {supplytmp} /";
             surfs.Add(surf8);
 
 
