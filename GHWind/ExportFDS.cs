@@ -67,9 +67,9 @@ namespace GHWind
             //13
             pManager.AddNumberParameter("Supply Temperature", "Supply Temp", "Temperature of the supply air in °C", GH_ParamAccess.item);
             //14
-            pManager.AddNumberParameter("Supply Flow", "Supply Flow", "Supply flow in m3/s", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Supply Velocity", "Supply Velocity", "Supply velocity in m/s", GH_ParamAccess.item);
             //15
-            pManager.AddNumberParameter("Exhaust Flow", "Exhaust Flow", "Exhaust flow in m3/s", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Exhaust Velocity", "Exhaust Velocity", "Exhaust velocity in m/s", GH_ParamAccess.item);
             //16
             pManager.AddTextParameter("Slices", "Slices", "List of &SLCF lines", GH_ParamAccess.list);
             
@@ -253,22 +253,22 @@ namespace GHWind
 
                     case 0: //Linear
 
-                        string supplyline = $"&SURF ID = 'supply', VOLUME_FLOW = -{supply.ToString()},TMP_FRONT= {supplytmp} /";
+                        string supplyline = $"&SURF ID = 'supply', VEL = -{supply.ToString()},TMP_FRONT= {supplytmp} /";
                         supplylist.Add(supplyline);
                         break;
                     case 1://Linear Louvered
                         
-                        string supplylinelin = $"&SURF ID='supply', VOLUME_FLOW=-{supply}, VEL_T=0,-{supply / 0.09 * Math.Tan(45 * Math.PI / 180)}, TMP_FRONT= {supplytmp} /";
+                        string supplylinelin = $"&SURF ID='supply', VEL=-{supply}, VEL_T=0,-{supply / 0.09 * Math.Tan(45 * Math.PI / 180)}, TMP_FRONT= {supplytmp} /";
                         supplylist.Add(supplylinelin);
                         break;
                     case 2: // Square Louvered
                        
-                        List<string> supplylines = InletGeo.WriteSurfSquare(supply, area, supplytmp);
+                        List<string> supplylines = InletGeo.WriteSurfSquare(supply, supplytmp);
                         supplylist.AddRange(supplylines);
                         break;
                     case 3: //Swirl
                        
-                        List<string> supplylinesswirl = InletGeo.WriteSurfSwirl(supply, area, supplytmp);
+                        List<string> supplylinesswirl = InletGeo.WriteSurfSwirl(supply, supplytmp);
                         supplylist.AddRange(supplylinesswirl);
                         break;
                 }
@@ -291,7 +291,7 @@ namespace GHWind
                 //supplylist.Add(supplyline);
 
                 List<string> exhaustlist = new List<string>();
-                string exhaustline = $"&SURF ID = 'exhaust', VOLUME_FLOW = {exhaust.ToString()} /";
+                string exhaustline = $"&SURF ID = 'exhaust', VEL = {exhaust.ToString()} /";
                 exhaustlist.Add(exhaustline);
 
                 //Get slices lines
