@@ -139,6 +139,8 @@ namespace GHWind
             pManager.AddNumberParameter("Exhaust Velocity", "Exhaust Velocity", "Velocity flow in m/s", GH_ParamAccess.item);
             //10
             pManager.AddIntegerParameter("Case Index", "Index", "Index of the case to write as an integer", GH_ParamAccess.item);
+            //11
+            pManager.AddIntegerParameter("Vent Type", "Vent Type", "Coefficients for Vent Type. 0 = Linear; 1 = Louvered; 2 = Radial; 3 = Spiral.", GH_ParamAccess.item);
 
 
         }
@@ -183,6 +185,9 @@ namespace GHWind
 
             int index = 0;
             if (!DA.GetData(10, ref index)) { return; };
+
+            int venttype = 0;
+            if (!DA.GetData(11, ref venttype)) { return; };
 
 
             //Mimic FDS geom.f90  snappingGeom subroutine
@@ -305,15 +310,30 @@ namespace GHWind
             {
                 if (obstPoint.Contains(node) == true)
                 {
-                    geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 1 });
+                    geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 6 });
                 }
                 else if(inletPoints.Contains(node) == true)
                 {
-                    geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = -supply });
+                    switch(venttype)
+                    {
+                        case 0:
+                            geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 2 });
+                            break;
+                        case 1:
+                            geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 3 });
+                            break;
+                        case 2:
+                            geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 4 });
+                            break;
+                        case 3:
+                            geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 5 });
+                            break;
+                    }
+                    
                 }
                 else if(outletPoints.Contains(node)==true)
                 {
-                    geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = exhaust });
+                    geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 1 });
                 }
                 else
                 {
