@@ -13,6 +13,10 @@ using GH_IO.Serialization;
 using System.Net.NetworkInformation;
 using Rhino.Geometry.Collections;
 using Rhino.Collections;
+using System.Drawing.Text;
+using Grasshopper.Kernel.Geometry;
+using Rhino.Input.Custom;
+using Grasshopper.Documentation;
 
 /*
  * GHExportGeometry.cs
@@ -37,6 +41,79 @@ namespace GHWind
         }
 
 
+        public static List<Point3d> SnapSurfs(List<Surface> surfs, List<Point3d> nodes)
+        {
+            List<string> geoStrings = new List<string>();
+            List<Point3d> snappedVerts = new List<Point3d>();
+            List<BoundingBox> snappedSurfs = new List<BoundingBox>();
+            Rhino.Geometry.Plane plane = new Rhino.Geometry.Plane(10, 10, 0, 0);
+
+            foreach (Surface surf in surfs)
+            {
+                Brep brep = surf.ToBrep();
+                BoundingBox surfBox = surf.GetBoundingBox(true);
+                var surfCorners = surfBox.GetCorners();
+
+                foreach (Point3d corner in surfCorners)
+                {
+                    var newVerts = corner;
+                    if (nodes.Contains(newVerts) == false)
+                    {
+                        Point3d closestPoint = Point3dList.ClosestPointInList(nodes, newVerts);
+                        newVerts = closestPoint;
+                    }
+                    else
+                    {
+                        newVerts = newVerts;
+                    }
+                    
+                    snappedVerts.Add(newVerts);
+                    
+                }
+
+                
+                
+                BoundingBox snappedBox = new BoundingBox(snappedVerts);
+                snappedSurfs.Add(snappedBox);
+                snappedVerts.Clear();
+            }
+
+
+            //Makes a list of all the points in the list of mesh nodes that are contained within a surface
+            List<Point3d> surfPoint = new List<Point3d>();
+            foreach (BoundingBox surf in snappedSurfs)
+            {
+                var point = surf.GetCorners();
+                List<Point3d> distinct = point.Distinct().ToList();
+
+                List<double> xValues = new List<double>();
+                List<double> yValues = new List<double>();
+                List<double> zValues = new List<double>();
+                foreach (Point3d d in distinct)
+                {
+                    xValues.Add(d.X);
+                    yValues.Add(d.Y);
+                    zValues.Add(d.Z);
+                }
+
+                foreach (Point3d node in nodes)
+                {
+                    
+                    if ((node.X <= xValues.Max() && xValues.Min() <= node.X) && (node.Y <= yValues.Max() && yValues.Min() <= node.Y) && (node.Z <= zValues.Max() && zValues.Min() <= node.Z))
+                    {
+                        surfPoint.Add(node);
+                    }
+                }
+
+            }
+
+            return surfPoint;
+        }
+
+
+
+
+
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             //0
@@ -57,10 +134,11 @@ namespace GHWind
             //7
             pManager.AddIntegerParameter("IJK", "I J K", "Number of cells in the X, Y, and Z directions as a list.", GH_ParamAccess.list);
             //8
-            pManager.AddNumberParameter("Supply Flow", "Supply Flow", "Supply flow in m3/s", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Supply Velocity", "Supply Velocity", "Supply velocity in m/s", GH_ParamAccess.item);
             //9
-            pManager.AddNumberParameter("Exhaust Flow", "Exhaust Flow", "Exhaust flow in m3/s", GH_ParamAccess.item);
-
+            pManager.AddNumberParameter("Exhaust Velocity", "Exhaust Velocity", "Velocity flow in m/s", GH_ParamAccess.item);
+            //10
+            pManager.AddIntegerParameter("Case Index", "Index", "Index of the case to write as an integer", GH_ParamAccess.item);
 
 
         }
@@ -103,6 +181,9 @@ namespace GHWind
             List<Surface> outlets = new List<Surface>();
             if (!DA.GetDataList(6, outlets)) { return; }
 
+            int index = 0;
+            if (!DA.GetData(10, ref index)) { return; };
+
 
             //Mimic FDS geom.f90  snappingGeom subroutine
 
@@ -130,17 +211,31 @@ namespace GHWind
                 }
             }
 
+            //Make a list of all the nodes on the surface of the box
+
+            List<Point3d> edgeNodes = new List<Point3d>();
+            foreach (Point3d node in nodes)
+            {
+                if (node.X == boxCorners[0].X | node.X == boxCorners[6].X | node.Y == boxCorners[0].Y | node.Y == boxCorners[6].Y | node.Z == boxCorners[0].Z | node.Z == boxCorners[6].Z)
+                {
+                    edgeNodes.Add(node);
+                }
+            }
+
+
+
+
 
             //Take the obstacles boxes and the origin point and remap the boxes to an origin of 0,0,0.
             //For each point in the new list of obstacle points, check if that point exists in the list of mesh nodes
             //(therefore is the obstacle aligned with a mesh cell) if not, find the nearest point and replace the unaligned point
             //with a point that is aligned to the mesh and create a new obstacle box.
             //
+            List<Point3d> obstPoint = new List<Point3d>();
             List<string> geoStrings = new List<string>();
             if (obstacles.Count() != 0)
             {
-                Point3d zero = new Point3d(0, 0, 0);
-                Vector3d obstTranslate = zero - origin;
+                
 
                 List<Point3d> snappedVerts = new List<Point3d>(); //
 
@@ -148,7 +243,7 @@ namespace GHWind
 
                 List<Box> snappedObsts = new List<Box>();
 
-                Plane plane = new Plane(10, 10, 0, 0);
+                Rhino.Geometry.Plane plane = new Rhino.Geometry.Plane(10, 10, 0, 0);
 
                 foreach (Box obst in obstacles)
                 {
@@ -158,7 +253,7 @@ namespace GHWind
                     foreach (Point3d corner in obstCorners)
                     {
 
-                        Point3d newVerts = corner + obstTranslate;
+                        Point3d newVerts = corner;
 
                         if (nodes.Contains(newVerts) == false)
                         {
@@ -175,21 +270,21 @@ namespace GHWind
 
                     Box snappedBox = new Box(plane, snappedVerts);
                     snappedObsts.Add(snappedBox);
-
+                    snappedVerts.Clear();
 
                 }
 
 
 
                 //Makes a list of all the points in the list of mesh nodes that are contained within an obstacle
-                List<Point3d> obstPoint = new List<Point3d>();
+                
                 foreach (Box obst in snappedObsts)
                 {
                     Brep brepObst = obst.ToBrep();
                     foreach (Point3d node in nodes)
                     {
 
-                        if (brepObst.IsPointInside(node, 0.0001, false) == true)
+                        if (brepObst.IsPointInside(node, 0.0001, true) == true)
                         {
                             obstPoint.Add(node);
                         }
@@ -198,59 +293,54 @@ namespace GHWind
                 }
 
 
-                var geoList = new List<GeoArray>();
-                foreach (Point3d node in nodes)
+            }//End of if Geo != 0
+
+            //Creates a new array in the format [X-coordinate, Y-coordinate, Z-coordinate, Definition] where definition
+            //denotes whether or not that node is contained within or along the edge of an obstacle
+            var geoList = new List<GeoArray>();
+            List<Point3d> inletPoints = SnapSurfs(inlets, edgeNodes);
+            List<Point3d> outletPoints = SnapSurfs(outlets, edgeNodes);
+
+            foreach (Point3d node in nodes)
+            {
+                if (obstPoint.Contains(node) == true)
                 {
-                    if (obstPoint.Contains(node) == true)
-                    {
-                        geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 1 });
-                    }
-                    else
-                    {
-                        geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 0 });
-                    }
+                    geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 1 });
                 }
-
-
-                foreach (Point3d node in nodes)
+                else if(inletPoints.Contains(node) == true)
                 {
-                    var newNodes = node.ToString();
-                    verts.Add(newNodes);
+                    geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = -supply });
                 }
-
-                
-                foreach (GeoArray item in geoList)
+                else if(outletPoints.Contains(node)==true)
                 {
-                    string geoString = item.X.ToString() + "," + item.Y.ToString() + "," + item.Z.ToString() + "," + item.D.ToString();
-                    geoStrings.Add(geoString);
+                    geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = exhaust });
                 }
-
+                else
+                {
+                    geoList.Add(new GeoArray { X = node[0], Y = node[1], Z = node[2], D = 0 });
+                }
             }
-        
+
+            //Writes the GeoArray to a comma delimmited list
+            foreach (GeoArray item in geoList)
+            {
+                string geoString = $"{ item.X.ToString() },{ item.Y.ToString()},{ item.Z.ToString()},{ item.D.ToString()}";
+                geoStrings.Add(geoString);
+            }
+
+
             var geoArray = geoStrings.ToArray();
 
 
-            //EXPORT GEOMETRY
+
+            //EXPORT GEOMETRY to a csv file
             if (export)
             {
-                File.WriteAllLines(path, geoArray);
+                string filepath = $@"{path}\{index.ToString()}.csv";
+                var currentfile = File.Create(filepath);
+                currentfile.Close();
+                File.WriteAllLines(filepath, geoArray);
                 export = false;
-
-                /*                StreamWriter file = new StreamWriter(path);
-                                //my2darray  is my 2d array created.
-                                for (int i = 0; i < geoArray.GetLength(1); i++)
-                                {
-                                    for (int j = 0; j < geoArray.GetLength(0); j++)
-                                    {
-                                        file.Write(geoArray[i, j]);
-
-                                        //it is comman and not a tab
-                                        file.Write(",");
-                                    }
-                                    //go to next line
-                                    file.Write("\n");
-
-                                }*/
 
 
             }
