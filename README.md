@@ -26,3 +26,9 @@ Try out the `*.gh` and `*.3dm` files in the [Tutorials](https://github.com/chris
 ![alt text](https://github.com/christophwaibel/GH_Wind/blob/master/Documentation/image23.gif "Image from Rhino")
 
 *Capture from Rhino, 50x50x40 mesh, 10 times speed up*
+
+<br><br>
+
+## FDS Components
+
+The Export FDS and Flatten Components are new contributions to the repository from the master's thesis titled 'Teaching CFD to Pix2pix'. The Export FDS component writes a Fire Dynamics Simulator setup file for a single room geometry with objects and supply and exhaust vents. The Flatten component exports a list of mesh nodes and defines if the node is contained in an object or a vent.  
